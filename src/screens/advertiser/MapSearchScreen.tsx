@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     },
     mapContainer: {
         // flex: 1,
-        height: height * 0.55,
+        height: height * 0.45,
         position: 'relative',
     },
     map: {

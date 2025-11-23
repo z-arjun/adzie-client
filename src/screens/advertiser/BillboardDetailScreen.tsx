@@ -10,16 +10,18 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Billboard } from '../../types';
 import billboardService from '../../services/billboardService';
 import { lightTheme } from '../../theme';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const BillboardDetailScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
-    // @ts-ignore - params might be undefined in strict mode but we expect it
+    // @ts-ignore
     const { billboardId } = route.params || {};
 
     const [selectedBillboard, setSelectedBillboard] = useState<Billboard | null>(null);
@@ -54,7 +56,8 @@ const BillboardDetailScreen = () => {
     if (!selectedBillboard) {
         return (
             <View style={styles.centerContainer}>
-                <Text style={styles.errorText}>{error || `Billboard not found (ID: ${billboardId})`}</Text>
+                <MaterialCommunityIcons name="billboard" size={64} color={lightTheme.colors.textSecondary} />
+                <Text style={styles.errorText}>{error || `Billboard not found`}</Text>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.retryButton}>
                     <Text style={styles.retryButtonText}>Go Back</Text>
                 </TouchableOpacity>
@@ -63,327 +66,541 @@ const BillboardDetailScreen = () => {
     }
 
     return (
-        <ScrollView style={styles.container}>
-            {/* Image Gallery */}
-            <View style={styles.imageGallery}>
-                <Image
-                    source={typeof selectedBillboard.images[selectedImageIndex] === 'string' ? { uri: selectedBillboard.images[selectedImageIndex] } : selectedBillboard.images[selectedImageIndex]}
-                    style={styles.mainImage}
-                />
-                <View style={styles.imageThumbnails}>
-                    {selectedBillboard.images.map((img: string | number, idx: number) => (
-                        <TouchableOpacity
-                            key={idx}
-                            onPress={() => setSelectedImageIndex(idx)}
-                            style={[
-                                styles.thumbnail,
-                                selectedImageIndex === idx && styles.thumbnailActive,
-                            ]}>
-                            <Image source={typeof img === 'string' ? { uri: img } : img} style={styles.thumbnailImage} />
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </View>
+        <View style={styles.container}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Hero Image Section */}
+                <View style={styles.imageSection}>
+                    <Image
+                        source={typeof selectedBillboard.images[selectedImageIndex] === 'string'
+                            ? { uri: selectedBillboard.images[selectedImageIndex] }
+                            : selectedBillboard.images[selectedImageIndex]}
+                        style={styles.heroImage}
+                        resizeMode="cover"
+                    />
 
-            {/* Details */}
-            <View style={styles.content}>
-                <View style={styles.headerRow}>
-                    <Text style={styles.title}>{selectedBillboard.title}</Text>
-                    <View style={[styles.typeBadge, selectedBillboard.type === 'digital' ? styles.digitalBadge : styles.staticBadge]}>
-                        <Text style={styles.typeText}>{selectedBillboard.type === 'digital' ? 'Digital' : 'Static'}</Text>
-                    </View>
-                </View>
+                    {/* Gradient Overlay */}
+                    <LinearGradient
+                        colors={['transparent', 'rgba(0,0,0,0.7)']}
+                        style={styles.imageGradient}
+                    />
 
-                <View style={styles.ratingRow}>
-                    <Text style={styles.ratingText}>
-                        ⭐ {selectedBillboard.rating.toFixed(1)}
-                    </Text>
-                    <Text style={styles.reviewCount}>
-                        ({selectedBillboard.reviewCount} reviews)
-                    </Text>
-                    <Text style={styles.views}>👁 {selectedBillboard.viewsCount} views</Text>
-                </View>
+                    {/* Back Button */}
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => navigation.goBack()}
+                    >
+                        <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
+                    </TouchableOpacity>
 
-                <View style={styles.statsRow}>
-                    <View style={styles.statItem}>
-                        <Text style={styles.statValue}>
-                            {selectedBillboard.estimatedDailyImpressions.toLocaleString()}
+                    {/* Type Badge */}
+                    <View style={[
+                        styles.typeBadgeHero,
+                        selectedBillboard.type === 'digital' ? styles.digitalBadge : styles.staticBadge
+                    ]}>
+                        <MaterialCommunityIcons
+                            name={selectedBillboard.type === 'digital' ? 'monitor' : 'billboard'}
+                            size={14}
+                            color="#fff"
+                        />
+                        <Text style={styles.typeBadgeText}>
+                            {selectedBillboard.type === 'digital' ? 'Digital' : 'Static'}
                         </Text>
-                        <Text style={styles.statLabel}>Daily Impressions</Text>
                     </View>
-                    <View style={styles.statDivider} />
-                    <View style={styles.statItem}>
-                        <Text style={styles.statValue}>
-                            {selectedBillboard.dimensions.width}x{selectedBillboard.dimensions.height}
-                        </Text>
-                        <Text style={styles.statLabel}>Size ({selectedBillboard.dimensions.unit})</Text>
-                    </View>
-                </View>
 
-                <View style={styles.priceRow}>
-                    <View>
-                        <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                            <Text style={styles.price}>₹{selectedBillboard.pricePerDay}</Text>
-                            <Text style={styles.perDay}>/day</Text>
+                    {/* Image Thumbnails */}
+                    {selectedBillboard.images.length > 1 && (
+                        <View style={styles.thumbnailContainer}>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.thumbnailScrollContent}
+                            >
+                                {selectedBillboard.images.map((img: string | number, idx: number) => (
+                                    <TouchableOpacity
+                                        key={idx}
+                                        onPress={() => setSelectedImageIndex(idx)}
+                                        style={[
+                                            styles.thumbnail,
+                                            selectedImageIndex === idx && styles.thumbnailActive,
+                                        ]}
+                                    >
+                                        <Image
+                                            source={typeof img === 'string' ? { uri: img } : img}
+                                            style={styles.thumbnailImage}
+                                        />
+                                        {selectedImageIndex === idx && (
+                                            <View style={styles.thumbnailOverlay} />
+                                        )}
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
                         </View>
-                        <Text style={styles.minBooking}>Min. {selectedBillboard.minBookingDays} days</Text>
-                    </View>
+                    )}
                 </View>
 
-                {/* Features */}
-                {selectedBillboard.features && selectedBillboard.features.length > 0 && (
+                {/* Content Section */}
+                <View style={styles.contentSection}>
+                    {/* Title & Rating */}
+                    <View style={styles.titleSection}>
+                        <Text style={styles.title}>{selectedBillboard.title}</Text>
+                        <View style={styles.ratingContainer}>
+                            <MaterialCommunityIcons name="star" size={18} color="#FFC107" />
+                            <Text style={styles.ratingText}>{selectedBillboard.rating.toFixed(1)}</Text>
+                            <Text style={styles.reviewCount}>({selectedBillboard.reviewCount})</Text>
+                        </View>
+                    </View>
+
+                    {/* Location */}
+                    <View style={styles.locationRow}>
+                        <MaterialCommunityIcons name="map-marker" size={18} color={lightTheme.colors.primary} />
+                        <Text style={styles.locationText}>{selectedBillboard.location.address}</Text>
+                    </View>
+
+                    {/* Stats Cards */}
+                    <View style={styles.statsContainer}>
+                        <View style={styles.statCard}>
+                            <View style={[styles.statIconContainer, { backgroundColor: '#E3F2FD' }]}>
+                                <MaterialCommunityIcons name="eye" size={24} color="#2196F3" />
+                            </View>
+                            <Text style={styles.statValue}>
+                                {selectedBillboard.estimatedDailyImpressions.toLocaleString()}
+                            </Text>
+                            <Text style={styles.statLabel}>Daily Impressions</Text>
+                        </View>
+
+                        <View style={styles.statCard}>
+                            <View style={[styles.statIconContainer, { backgroundColor: '#F3E5F5' }]}>
+                                <MaterialCommunityIcons name="resize" size={24} color="#9C27B0" />
+                            </View>
+                            <Text style={styles.statValue}>
+                                {selectedBillboard.dimensions.width}×{selectedBillboard.dimensions.height}
+                            </Text>
+                            <Text style={styles.statLabel}>Size ({selectedBillboard.dimensions.unit})</Text>
+                        </View>
+
+                        <View style={styles.statCard}>
+                            <View style={[styles.statIconContainer, { backgroundColor: '#FFF3E0' }]}>
+                                <MaterialCommunityIcons name="lightbulb-on" size={24} color="#FF9800" />
+                            </View>
+                            <Text style={styles.statValue}>
+                                {selectedBillboard.lighting === 'both' ? '24/7' :
+                                    selectedBillboard.lighting === 'night' ? 'Night' : 'Day'}
+                            </Text>
+                            <Text style={styles.statLabel}>Lighting</Text>
+                        </View>
+                    </View>
+
+                    {/* Features */}
+                    {selectedBillboard.features && selectedBillboard.features.length > 0 && (
+                        <View style={styles.section}>
+                            <Text style={styles.sectionTitle}>✨ Features</Text>
+                            <View style={styles.featuresGrid}>
+                                {selectedBillboard.features.map((feature: string, index: number) => (
+                                    <View key={index} style={styles.featureChip}>
+                                        <MaterialCommunityIcons name="check-circle" size={14} color={lightTheme.colors.primary} />
+                                        <Text style={styles.featureText}>{feature}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
+                    )}
+
+                    {/* Description */}
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>✨ Features</Text>
-                        <View style={styles.featuresContainer}>
-                            {selectedBillboard.features.map((feature: string, index: number) => (
-                                <View key={index} style={styles.featureChip}>
-                                    <Text style={styles.featureText}>{feature}</Text>
-                                </View>
-                            ))}
+                        <Text style={styles.sectionTitle}>📝 About This Billboard</Text>
+                        <View style={styles.descriptionCard}>
+                            <Text style={styles.descriptionText}>{selectedBillboard.description}</Text>
                         </View>
                     </View>
-                )}
 
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>📍 Location</Text>
-                    <Text style={styles.sectionText}>{selectedBillboard.location.address}</Text>
-                    <Text style={styles.sectionText}>
-                        {selectedBillboard.location.city}, {selectedBillboard.location.state} {selectedBillboard.location.zipCode}
-                    </Text>
+                    {/* Details */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>📋 Details</Text>
+                        <View style={styles.detailsCard}>
+                            <View style={styles.detailRow}>
+                                <View style={styles.detailIconWrapper}>
+                                    <MaterialCommunityIcons name="calendar-range" size={20} color={lightTheme.colors.primary} />
+                                </View>
+                                <View style={styles.detailContent}>
+                                    <Text style={styles.detailLabel}>Minimum Booking</Text>
+                                    <Text style={styles.detailValue}>{selectedBillboard.minBookingDays} days</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.detailDivider} />
+
+                            <View style={styles.detailRow}>
+                                <View style={styles.detailIconWrapper}>
+                                    <MaterialCommunityIcons name="account-tie" size={20} color={lightTheme.colors.primary} />
+                                </View>
+                                <View style={styles.detailContent}>
+                                    <Text style={styles.detailLabel}>Owner</Text>
+                                    <Text style={styles.detailValue}>Premium Verified</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.detailDivider} />
+
+                            <View style={styles.detailRow}>
+                                <View style={styles.detailIconWrapper}>
+                                    <MaterialCommunityIcons name="chart-line" size={20} color={lightTheme.colors.primary} />
+                                </View>
+                                <View style={styles.detailContent}>
+                                    <Text style={styles.detailLabel}>Total Views</Text>
+                                    <Text style={styles.detailValue}>{selectedBillboard.viewsCount.toLocaleString()}</Text>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Spacing for fixed footer */}
+                    <View style={{ height: 100 }} />
                 </View>
+            </ScrollView>
 
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>📏 Dimensions</Text>
-                    <Text style={styles.sectionText}>
-                        {selectedBillboard.dimensions.width} x {selectedBillboard.dimensions.height}{' '}
-                        {selectedBillboard.dimensions.unit}
-                    </Text>
+            {/* Fixed Bottom Bar */}
+            <View style={styles.bottomBar}>
+                <View style={styles.priceContainer}>
+                    <Text style={styles.priceLabel}>Price</Text>
+                    <View style={styles.priceRow}>
+                        <Text style={styles.price}>₹{selectedBillboard.pricePerDay}</Text>
+                        <Text style={styles.perDay}>/day</Text>
+                    </View>
                 </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>💡 Lighting</Text>
-                    <Text style={styles.sectionText}>
-                        {selectedBillboard.lighting === 'both'
-                            ? 'Day & Night Illumination'
-                            : selectedBillboard.lighting === 'night'
-                                ? 'Night Illumination Only'
-                                : 'Daylight Only'}
-                    </Text>
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>📝 Description</Text>
-                    <Text style={styles.sectionText}>{selectedBillboard.description}</Text>
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>👤 Owner Info</Text>
-                    <Text style={styles.sectionText}>Managed by: Owner #{selectedBillboard.ownerId}</Text>
-                    <Text style={styles.sectionText}>Response Rate: 98%</Text>
-                </View>
-
                 <TouchableOpacity style={styles.bookButton}>
-                    <Text style={styles.bookButtonText}>Book This Billboard</Text>
+                    <LinearGradient
+                        colors={[lightTheme.colors.primary, '#7C3AED']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.bookButtonGradient}
+                    >
+                        <Text style={styles.bookButtonText}>Book Now</Text>
+                        <MaterialCommunityIcons name="arrow-right" size={20} color="#fff" />
+                    </LinearGradient>
                 </TouchableOpacity>
             </View>
-        </ScrollView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: lightTheme.colors.background,
+        backgroundColor: '#F8F9FA',
     },
     centerContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#F8F9FA',
     },
-    imageGallery: {
-        backgroundColor: lightTheme.colors.surface,
+    imageSection: {
+        position: 'relative',
     },
-    mainImage: {
+    heroImage: {
         width: width,
-        height: 220,
-        backgroundColor: lightTheme.colors.surface,
+        height: height * 0.45,
+        backgroundColor: '#E0E0E0',
     },
-    imageThumbnails: {
+    imageGradient: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 100,
+    },
+    backButton: {
+        position: 'absolute',
+        top: 50,
+        left: 16,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    typeBadgeHero: {
+        position: 'absolute',
+        top: 50,
+        right: 16,
         flexDirection: 'row',
-        padding: lightTheme.spacing.sm,
-        gap: lightTheme.spacing.xs,
-    },
-    thumbnail: {
-        borderWidth: 2,
-        borderColor: 'transparent',
-        borderRadius: lightTheme.borderRadius.sm,
-        overflow: 'hidden',
-    },
-    thumbnailActive: {
-        borderColor: lightTheme.colors.primary,
-    },
-    thumbnailImage: {
-        width: 50,
-        height: 50,
-    },
-    content: {
-        padding: lightTheme.spacing.md,
-    },
-    headerRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: lightTheme.spacing.xs,
-    },
-    title: {
-        ...lightTheme.typography.h4,
-        flex: 1,
-        marginRight: lightTheme.spacing.sm,
-    },
-    typeBadge: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        backgroundColor: lightTheme.colors.surface,
-        borderWidth: 1,
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        gap: 4,
     },
     digitalBadge: {
-        borderColor: '#2196F3',
-        backgroundColor: '#E3F2FD',
+        backgroundColor: '#2196F3',
     },
     staticBadge: {
-        borderColor: '#4CAF50',
-        backgroundColor: '#E8F5E9',
+        backgroundColor: '#4CAF50',
     },
-    typeText: {
+    typeBadgeText: {
         fontSize: 12,
-        fontWeight: 'bold',
-        color: '#333',
+        fontWeight: '700',
+        color: '#fff',
     },
-    ratingRow: {
+    thumbnailContainer: {
+        position: 'absolute',
+        bottom: 16,
+        left: 0,
+        right: 0,
+    },
+    thumbnailScrollContent: {
+        paddingHorizontal: 16,
+        gap: 8,
+    },
+    thumbnail: {
+        width: 60,
+        height: 60,
+        borderRadius: 12,
+        overflow: 'hidden',
+        borderWidth: 2,
+        borderColor: 'transparent',
+    },
+    thumbnailActive: {
+        borderColor: '#fff',
+    },
+    thumbnailImage: {
+        width: '100%',
+        height: '100%',
+    },
+    thumbnailOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(98, 0, 238, 0.3)',
+    },
+    contentSection: {
+        flex: 1,
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        marginTop: -24,
+        paddingTop: 24,
+        paddingHorizontal: 20,
+    },
+    titleSection: {
+        marginBottom: 12,
+    },
+    title: {
+        fontSize: 26,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 8,
+        lineHeight: 32,
+    },
+    ratingContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: lightTheme.spacing.sm,
-        gap: lightTheme.spacing.sm,
+        gap: 4,
     },
     ratingText: {
-        ...lightTheme.typography.body2,
+        fontSize: 16,
         fontWeight: '600',
+        color: '#1A1A1A',
     },
     reviewCount: {
-        ...lightTheme.typography.caption,
-        color: lightTheme.colors.textSecondary,
+        fontSize: 14,
+        color: '#666',
     },
-    views: {
-        ...lightTheme.typography.caption,
-        color: lightTheme.colors.textSecondary,
-        marginLeft: 'auto',
-    },
-    priceRow: {
+    locationRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: lightTheme.spacing.md,
-        paddingVertical: lightTheme.spacing.sm,
-        borderBottomWidth: 1,
-        borderBottomColor: lightTheme.colors.border,
+        gap: 6,
+        marginBottom: 20,
     },
-    price: {
-        ...lightTheme.typography.h3,
-        color: lightTheme.colors.primary,
+    locationText: {
+        fontSize: 14,
+        color: '#666',
+        flex: 1,
     },
-    perDay: {
-        ...lightTheme.typography.body2,
-        color: lightTheme.colors.textSecondary,
-        marginLeft: 4,
+    statsContainer: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 24,
     },
-    minBooking: {
-        ...lightTheme.typography.caption,
-        color: lightTheme.colors.textSecondary,
-        marginTop: 2,
+    statCard: {
+        flex: 1,
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 16,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        ...lightTheme.shadows.small,
+    },
+    statIconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    statValue: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 2,
+    },
+    statLabel: {
+        fontSize: 11,
+        color: '#666',
+        textAlign: 'center',
     },
     section: {
-        marginBottom: lightTheme.spacing.md,
+        marginBottom: 24,
     },
     sectionTitle: {
-        ...lightTheme.typography.h5,
-        fontSize: 16,
-        marginBottom: lightTheme.spacing.xs,
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginBottom: 12,
     },
-    sectionText: {
-        ...lightTheme.typography.body2,
-        color: lightTheme.colors.textSecondary,
-        lineHeight: 20,
-    },
-    featuresContainer: {
+    featuresGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 8,
-        marginTop: 4,
     },
     featureChip: {
-        backgroundColor: lightTheme.colors.surface,
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F3F4F6',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 20,
+        gap: 6,
         borderWidth: 1,
-        borderColor: lightTheme.colors.border,
+        borderColor: '#E5E7EB',
     },
     featureText: {
+        fontSize: 13,
+        color: '#1A1A1A',
+        fontWeight: '500',
+    },
+    descriptionCard: {
+        backgroundColor: '#F8F9FA',
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    descriptionText: {
+        fontSize: 14,
+        color: '#4B5563',
+        lineHeight: 22,
+    },
+    detailsCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        overflow: 'hidden',
+    },
+    detailRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        gap: 12,
+    },
+    detailIconWrapper: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#F3F4F6',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    detailContent: {
+        flex: 1,
+    },
+    detailLabel: {
         fontSize: 12,
-        color: lightTheme.colors.text,
+        color: '#666',
+        marginBottom: 2,
+    },
+    detailValue: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#1A1A1A',
+    },
+    detailDivider: {
+        height: 1,
+        backgroundColor: '#E5E7EB',
+        marginHorizontal: 16,
+    },
+    bottomBar: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        paddingBottom: 20,
+        borderTopWidth: 1,
+        borderTopColor: '#E5E7EB',
+        gap: 12,
+        ...lightTheme.shadows.large,
+    },
+    priceContainer: {
+        flex: 1,
+    },
+    priceLabel: {
+        fontSize: 12,
+        color: '#666',
+        marginBottom: 2,
+    },
+    priceRow: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        gap: 4,
+    },
+    price: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: lightTheme.colors.primary,
+    },
+    perDay: {
+        fontSize: 14,
+        color: '#666',
     },
     bookButton: {
-        backgroundColor: lightTheme.colors.primary,
-        padding: lightTheme.spacing.sm,
-        borderRadius: lightTheme.borderRadius.md,
+        flex: 1.2,
+        borderRadius: 16,
+        overflow: 'hidden',
+    },
+    bookButtonGradient: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginTop: lightTheme.spacing.sm,
-        ...lightTheme.shadows.medium,
+        justifyContent: 'center',
+        paddingVertical: 16,
+        gap: 8,
     },
     bookButtonText: {
-        ...lightTheme.typography.button,
+        fontSize: 16,
+        fontWeight: '700',
         color: '#fff',
-    },
-    statsRow: {
-        flexDirection: 'row',
-        backgroundColor: lightTheme.colors.surface,
-        padding: lightTheme.spacing.md,
-        borderRadius: lightTheme.borderRadius.md,
-        marginBottom: lightTheme.spacing.md,
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        ...lightTheme.shadows.small,
-    },
-    statItem: {
-        alignItems: 'center',
-    },
-    statValue: {
-        ...lightTheme.typography.h5,
-        color: lightTheme.colors.primary,
-        marginBottom: 4,
-    },
-    statLabel: {
-        ...lightTheme.typography.caption,
-        color: lightTheme.colors.textSecondary,
-    },
-    statDivider: {
-        width: 1,
-        height: '80%',
-        backgroundColor: lightTheme.colors.border,
+        letterSpacing: 0.5,
     },
     errorText: {
-        ...lightTheme.typography.body1,
-        color: lightTheme.colors.error,
-        marginBottom: lightTheme.spacing.md,
+        fontSize: 16,
+        color: '#666',
+        marginTop: 16,
+        marginBottom: 24,
     },
     retryButton: {
-        padding: lightTheme.spacing.sm,
         backgroundColor: lightTheme.colors.primary,
-        borderRadius: lightTheme.borderRadius.md,
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 12,
     },
     retryButtonText: {
-        ...lightTheme.typography.button,
+        fontSize: 16,
+        fontWeight: '600',
         color: '#fff',
     },
 });

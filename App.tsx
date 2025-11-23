@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { View, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
 import * as Font from 'expo-font';
 import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
+import SplashScreen from './src/components/SplashScreen';
 
 const App = () => {
     const [fontsLoaded, setFontsLoaded] = useState(false);
+    const [showSplash, setShowSplash] = useState(true);
 
     useEffect(() => {
         async function loadFonts() {
@@ -18,20 +20,28 @@ const App = () => {
                     'Poppins-Bold': require('./assets/fonts/Poppins-Bold.ttf'),
                 });
                 setFontsLoaded(true);
+                // Show splash screen for at least 1.5 seconds after fonts load
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                setShowSplash(false);
             } catch (error) {
                 console.error('Error loading fonts:', error);
-                setFontsLoaded(true); // Continue anyway
+                setFontsLoaded(true);
+                setShowSplash(false);
             }
         }
         loadFonts();
     }, []);
 
+    // Show simple loading screen before fonts are ready
     if (!fontsLoaded) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#7C3AED" />
-            </View>
+            <View style={{ flex: 1, backgroundColor: '#6200EE' }} />
         );
+    }
+
+    // Show proper splash screen with logo after fonts are loaded
+    if (showSplash) {
+        return <SplashScreen />;
     }
 
     return (
@@ -46,4 +56,3 @@ const App = () => {
 };
 
 export default App;
-

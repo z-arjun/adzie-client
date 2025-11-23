@@ -45,7 +45,7 @@ const generateMockBillboards = (): Billboard[] => {
     ];
 
     // Generate 200 billboards
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 60; i++) {
         const area = areas[Math.floor(Math.random() * areas.length)];
         const location = generateRandomLocation(PUNE_LAT, PUNE_LNG, 15); // 15km radius
         const type = types[Math.floor(Math.random() * types.length)];
